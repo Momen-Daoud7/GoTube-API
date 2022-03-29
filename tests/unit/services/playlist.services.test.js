@@ -7,102 +7,86 @@ const database = require('../../../src/config/database')
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database()
 })
 
-
+let user1,category1,category2,channel1,channel2,playlist1,playlist2
 beforeEach(async () => {
-	await User.destroy({where:{}})
-	await Category.destroy({where:{}})
-	await Channel.destroy({where:{}})
-	await Playlist.destroy({where:{}})
+	await User.deleteMany({})
+	await Category.deleteMany({})
+	await Channel.deleteMany({})
+	await Playlist.deleteMany({})
 
-	await User.bulkCreate([
-		{
-			id:1,
+	user1 = new User({
 			name:"Momen Daoud Momen Daoud",
 			email:"momen@mail.com",
 			role:'admin',
 			password:"1223393"
-		}
-	])
+		})
 
-	await Category.bulkCreate([
-		{
-			id:1,
-			name:"Music"
-		},
-		{
-			id:2,
-			name:"computer"
-		}
+	category1 = new Category({name:"Music"})
+	category2 = new Category({name:"computer"})
 
-	])
-
-	await Channel.bulkCreate([
-		{
-			id:1,
+	channel1 = new Channel({
 			name:"Music for everyone",
-			userId:1,
+			user:user1._id,
 			image:"anything.png",
 			description:"anything",
-			categoryId:1
-		},
-		{
-			id:2,
+			category:category1._id
+		});
+	channel2 = new Channel({
 			name:"code with me",
 			image:"anything.png",
 			description:"anything",
-			userId:1,
-			categoryId:2
-		}
+			user:user1._id,
+			category:category2._id
+		})
 
-	])
-
-	await Playlist.bulkCreate([
-		{
-			id:1,
+	playlist1 = new Playlist({
 			name:"Best songs ever",
-			channelId:1,
+			channel:channel1._id,
 			description:"anything",
-		},
-		{
-			id:2,
+		})
+	playlist2= new Playlist({
 			name:"Learn python for beignners",
-			channelId:2,
+			channel:channel2._id,
 			description:"anything",
-		}
+		})
 
-	])
+	await user1.save();
+	await category1.save();
+	await category2.save();
+	await channel1.save();
+	await channel2.save();
+	await playlist1.save();
+	await playlist2.save();
 })
 
 describe('playlist services tests', () => {
 
 	it("Should return all playlistS",async () => {
-		const playlists = await playlistServices.getPlaylists();
+		const playlists = await playlistServices.getPlaylists(channel1._id);
 		expect(playlists).toEqual(expect.any(Array));
 		expect(playlists[0].name).toBe('Best songs ever')
-		expect(playlists[1].name).toBe("Learn python for beignners")
 	})
 
 	describe('test getplaylist functionallity', () => {
 
 		it("Should get a single playlist", async () => {
-			const playlist = await playlistServices.getPlaylist(1);
+			const playlist = await playlistServices.getPlaylist(playlist1._id);
 			expect(playlist.name).toBe('Best songs ever')
 		})
 
-		it("Should return false when playlist is not exists", async () => {
+		it("Should return false or undefined when playlist is not exists", async () => {
 			const playlist = await playlistServices.getPlaylist(282);
-			expect(playlist).toBe(false)
+			expect(playlist).toBe(undefined)
 		})
 	})
 
 	it("should create new playlist",async () => {
 		const data = { 
-			id:3,
 			name:"Learn javascript for beignners",
-			channelId:2,
+			channel:channel2._id,
 			description:"anything",
 		}
 		const playlist = await playlistServices.store(data)
@@ -114,15 +98,14 @@ describe('playlist services tests', () => {
 
 		it("Should update a playlist details",async () => {
 			const data = {name: "John Do"}
-			const playlist = await playlistServices.update(1,data)
+			const playlist = await playlistServices.update(playlist1._id,data)
 			expect(playlist.name).toBe(data.name)
 		})
 
-		it("Should return false when updateing unexiting playlist",async () => {
+		it("Should return false or undefined when updateing unexiting playlist",async () => {
 			const data = {name: "John Do"}
 			const playlist = await playlistServices.update(11,data)
-			expect(playlist).toBe(false)
-			expect(playlist.name).toBe(undefined)
+			expect(playlist).toBe(undefined)
 		})
 	})
 
@@ -130,13 +113,13 @@ describe('playlist services tests', () => {
 	describe("Test delete playlist functionallity",() => {
 
 		it("Should delete a playlist",async () => {
-			const playlist = await playlistServices.delete(1)
+			const playlist = await playlistServices.delete(playlist1._id)
 			expect(playlist).toBe(true)
 		})
 
-		it("Should return false when updateing unexiting playlist",async () => {
+		it("Should return false or undefined when updateing unexiting playlist",async () => {
 			const playlist = await playlistServices.delete(100)
-			expect(playlist).toBe(false)
+			expect(playlist).toBe(undefined)
 		})
 	})
 

@@ -1,27 +1,18 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-
-const User = require('./1-user');
-const Post = require('./7-post');
-
-const PostComment = database.define('post_comments', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const PostCommentSchema = new Schema({
 	content: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type:String,
+		required:[true,"Content is required"]
+	},
+	post:{
+		type: Schema.Types.ObjectId,
+		ref:'post',
+		required:[true,"Post is required"]
 	}
+})
 
-});
+const PostComment = mongoose.model('postcomment',PostCommentSchema);
 
-Post.hasMany(PostComment);
-PostComment.belongsTo(Post);
-User.hasMany(PostComment);
-PostComment.belongsTo(User);
-
-module.exports = PostComment; 
+module.exports = PostComment;

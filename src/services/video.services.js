@@ -4,7 +4,7 @@ module.exports = class VideoServices {
 	// get all categories
 	static async getVideos() {
 		try{
-			const videos = await Video.findAll({include:{all:true}});
+			const videos = await Video.find({});
 			return videos;
 		}catch(error) {
 			console.log(error);
@@ -24,11 +24,14 @@ module.exports = class VideoServices {
 	// update a Video
 	static async update(VideoId,data) {
 		try{
-			const oldVideo = await Video.findByPk(VideoId)
+			const oldVideo = await Video.findById(VideoId)
 			if(!oldVideo) {
 				return  false;
 			}
-			const updatedVideo = await oldVideo.update(data);
+			const updatedVideo = await Video.findByIdAndUpdate(VideoId,data,{
+				new:true,
+				runValidators:true
+			});
 			return updatedVideo;
 			
 		}catch(error) {
@@ -39,11 +42,11 @@ module.exports = class VideoServices {
 	// delete a Video
 	static async delete(VideoId) {
 		try{
-			const video = await Video.findByPk(VideoId);
+			const video = await Video.findById(VideoId);
 			if(!video) {
 				return false;
 			}
-			const deleted = await video.destroy();
+			const deleted = await video.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -53,7 +56,7 @@ module.exports = class VideoServices {
 	// get a single Video
 	static async getVideo(VideoId) {
 		try{
-			const video = await Video.findByPk(VideoId);
+			const video = await Video.findById(VideoId);
 			if(!video) {
 				console.log('no Video with that id');
 				return false;
@@ -63,6 +66,4 @@ module.exports = class VideoServices {
 			console.log(error);
 		}
 	}
-
-	
 }

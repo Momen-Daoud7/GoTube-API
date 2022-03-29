@@ -4,7 +4,7 @@ module.exports = class ChannelServices {
 	// get all categories
 	static async getChannels() {
 		try{
-			const channels = await Channel.findAll();
+			const channels = await Channel.find({})
 			return channels;
 		}catch(error) {
 			console.log(error);
@@ -14,7 +14,7 @@ module.exports = class ChannelServices {
 	// Check if the user owns the channel
 	static async isUserChannel(userId,channelId) {
 		try {
-			const user = await Channel.findOne({where:{userId,id:channelId}});
+			const user = await Channel.findOne({user:userId.toString(),id:channelId.toString()});
 			if(!user) {
 				return false
 			}
@@ -37,11 +37,14 @@ module.exports = class ChannelServices {
 	// update a Channel
 	static async update(ChannelId,data) {
 		try{
-			const oldChannel = await Channel.findByPk(ChannelId)
+			const oldChannel = await Channel.findById(ChannelId)
 			if(!oldChannel) {
 				return  false;
 			}
-			const updatedChannel = await oldChannel.update(data);
+			const updatedChannel = await Channel.findByIdAndUpdate(ChannelId,data,{
+				new:true,
+				runValidators:true
+			});
 			return updatedChannel;
 			
 		}catch(error) {
@@ -52,11 +55,11 @@ module.exports = class ChannelServices {
 	// delete a Channel
 	static async delete(ChannelId) {
 		try{
-			const channel = await Channel.findByPk(ChannelId);
+			const channel = await Channel.findById(ChannelId);
 			if(!channel) {
 				return false;
 			}
-			const deleted = await channel.destroy();
+			const deleted = await channel.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -66,7 +69,7 @@ module.exports = class ChannelServices {
 	// get a single Channel
 	static async getChannel(ChannelId) {
 		try{
-			const channel = await Channel.findByPk(ChannelId);
+			const channel = await Channel.findById(ChannelId);
 			if(!channel) {
 				console.log('no Channel with that id');
 				return false;
@@ -76,6 +79,4 @@ module.exports = class ChannelServices {
 			console.log(error);
 		}
 	}
-
-	
 }

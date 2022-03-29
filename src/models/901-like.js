@@ -1,54 +1,22 @@
-//helper 
-const uppercaseFirst = str => `${str[0].toUpperCase}${str.substr(1)}`
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const {Sequelize, Model } = require('sequelize');
-
-const database = require('../config/database');
-const User = require('./1-user');
-const Video = require('./5-video');
-const Post = require('./7-post');
-
-class Like extends Sequelize {
-	getLiketable(options) {
-		if(!this.liketableType) return Promise.resolve(null);
-		const mixinMethodName = `get${uppercaseFirst(this.liketableType)}`;
-		return this[mixinMethodName](options);
-	}
-}
-
- Like = database.define('likes', {
-
-	liketableId : {
-		type: Sequelize.INTEGER,
+const LikeSchema = new Schema({
+	user:{
+		type: Schema.Types.ObjectId,
+		ref:'user',
+		required:[true,"User is required"]
 	},
-	liketableType : {
-		type: Sequelize.STRING,
+	post: {
+		type: Schema.Types.ObjectId,
+		ref:'post',
+	},
+	video: {
+		type: Schema.Types.ObjectId,
+		ref:'video'
 	}
 });
 
-User.hasMany(Like);
-Like.belongsTo(User);
+const Like = mongoose.model('like',LikeSchema);
 
-
-Video.hasMany(Like , {
-	forieginKey: 'liketableId',
-	constraints: false,
-	scope: {
-		liketableType: 'video',
-	}
-});
-
-Like.belongsTo(Video,{forieginKey: 'liketableId',constraints: false});
-
-
-Post.hasMany(Like , {
-	forieginKey: 'liketableId',
-	constraints: false,
-	scope: {
-		liketableType: 'post',
-	}
-});
-
-Like.belongsTo(Post,{forieginKey: 'liketableId',constraints: false});
-
-module.exports = Like; 
+module.exports = Like;

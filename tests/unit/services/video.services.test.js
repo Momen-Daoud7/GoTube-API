@@ -3,79 +3,66 @@ const User = require('../../../src/models/1-user');
 const Category = require('../../../src/models/2-category');
 const Channel = require('../../../src/models/3-channel');
 const Video = require('../../../src/models/5-video');
-const database = require('../../../src/config/database')
+const database = require('../../../src/config/database');
+let user1,category1,category2,channel1,channel2,video1,video2;
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database()
 })
 
 
 beforeEach(async () => {
-	await User.destroy({where:{}})
-	await Category.destroy({where:{}})
-	await Channel.destroy({where:{}})
-	await Video.destroy({where:{}})
+	await User.deleteMany({})
+	await Category.deleteMany({})
+	await Channel.deleteMany({})
+	await Video.deleteMany({})
 
-	await User.bulkCreate([
-		{
-			id:1,
-			name:"Momen Daoud Momen Daoud",
-			email:"momen@mail.com",
-			role:'admin',
-			password:"1223393"
-		}
-	])
+	user1 = new User({
+		name:"Momen Daoud Momen Daoud",
+		email:"momen@mail.com",
+		role:'admin',
+		password:"1223393"
+	})
 
-	await Category.bulkCreate([
-		{
-			id:1,
-			name:"Music"
-		},
-		{
-			id:2,
-			name:"computer"
-		}
+	category1 = new Category({name:"Music"});
+	category2 = new Category({name:"computer"});
 
-	])
+	channel1 = new Channel({
+		name:"Music for everyone",
+		user:user1._id,
+		image:"anything.png",
+		description:"anything",
+		category:category1._id
+	})
+	channel2 = new Channel({
+		name:"code with me",
+		image:"anything.png",
+		description:"anything",
+		user:user1._id,
+		category:category2._id
+	})
 
-	await Channel.bulkCreate([
-		{
-			id:1,
-			name:"Music for everyone",
-			userId:1,
-			image:"anything.png",
-			description:"anything",
-			categoryId:1
-		},
-		{
-			id:2,
-			name:"code with me",
-			image:"anything.png",
-			description:"anything",
-			userId:1,
-			categoryId:2
-		}
+	video1 = new Video({
+		title:"Best songs ever",
+		channel:channel1._id,
+		description:"anything",
+		image:"any.jpg"
+	})
+	video2 = new Video({
+		title:"Node.js crash course",
+		channel:channel1._id,
+		description:"anything",
+		image:"any.jpg"
+	})
 
-	])
-
-	await Video.bulkCreate([
-		{
-			id:1,
-			title:"Best songs ever",
-			channelId:1,
-			description:"anything",
-			image:"any.jpg"
-		},
-		{
-			id:2,
-			title:"Node.js crash course",
-			channelId:2,
-			description:"anything",
-			image:"any.jpg"
-		}
-
-	])
+	await user1.save();
+	await category1.save();
+	await category2.save();
+	await channel1.save();
+	await channel2.save();
+	await video1.save();
+	await video2.save();
 })
 
 describe('video services tests', () => {
@@ -90,26 +77,24 @@ describe('video services tests', () => {
 	describe('test getvideo functionallity', () => {
 
 		it("Should get a single video", async () => {
-			const video = await videoServices.getVideo(1);
+			const video = await videoServices.getVideo(video1._id);
 			expect(video.title).toBe('Best songs ever')
 		})
 
-		it("Should return false when video is not exists", async () => {
+		it("Should return false or undefined when video is not exists", async () => {
 			const video = await videoServices.getVideo(282);
-			expect(video).toBe(false)
+			expect(video).toBe(undefined)
 		})
 	})
 
 	it("should create new video",async () => {
 		const data = { 
-			id:3,
 			title:"python crash course",
-			channelId:2,
+			channel:channel1._id,
 			description:"anything",
 			image:"any.jpg"
 		}
 		const video = await videoServices.store(data)
-		console.log(video)
 		expect(video.title).toBe(data.title)
 	})
 
@@ -117,15 +102,14 @@ describe('video services tests', () => {
 
 		it("Should update a video details",async () => {
 			const data = {title: "John Do"}
-			const video = await videoServices.update(1,data)
+			const video = await videoServices.update(video1._id,data)
 			expect(video.title).toBe(data.title)
 		})
 
-		it("Should return false when updateing unexiting video",async () => {
+		it("Should return false or undefined when updateing unexiting video",async () => {
 			const data = {title: "John Do"}
 			const video = await videoServices.update(11,data)
-			expect(video).toBe(false)
-			expect(video.title).toBe(undefined)
+			expect(video).toBe(undefined)
 		})
 	})
 
@@ -133,13 +117,13 @@ describe('video services tests', () => {
 	describe("Test delete video functionallity",() => {
 
 		it("Should delete a video",async () => {
-			const video = await videoServices.delete(1)
+			const video = await videoServices.delete(video1._id)
 			expect(video).toBe(true)
 		})
 
-		it("Should return false when updateing unexiting video",async () => {
+		it("Should return false or undefined when updateing unexiting video",async () => {
 			const video = await videoServices.delete(100)
-			expect(video).toBe(false)
+			expect(video).toBe(undefined)
 		})
 	})
 

@@ -4,7 +4,7 @@ module.exports = class LikeServices {
 	// get video Likes
 	static async getVideoLikes(videoId) {
 		try {	
-			const likes = Like.findAll({where:{videoId}});
+			const likes = Like.find({video:videoId});
 			return likes;
 		}catch(error) {	
 			console.log(error)
@@ -14,7 +14,7 @@ module.exports = class LikeServices {
 	// get video Likes
 	static async getPostLikes(postId) {
 		try {	
-			const likes = Like.findAll({where:{postId}});
+			const likes = Like.find({post:postId});
 			return likes;
 		}catch(error) {	
 			console.log(error)
@@ -34,11 +34,14 @@ module.exports = class LikeServices {
 	// update a Like
 	static async update(LikeId,data) {
 		try{
-			const oldLike = await Like.findByPk(LikeId)
+			const oldLike = await Like.findById(LikeId)
 			if(!oldLike) {
 				return  false;
 			}
-			const updatedLike = await oldLike.update(data);
+			const updatedLike = await Like.findByIdAndUpdate(LikeId,data,{
+				new:true,
+				runvalidators:true
+			});
 			return updatedLike;
 			
 		}catch(error) {
@@ -49,11 +52,11 @@ module.exports = class LikeServices {
 	// delete a Like
 	static async delete(LikeId) {
 		try{
-			const like = await Like.findByPk(LikeId);
+			const like = await Like.findById(LikeId);
 			if(!like) {
 				return false;
 			}
-			await like.destroy();
+			await like.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -63,7 +66,7 @@ module.exports = class LikeServices {
 	// get a single Like
 	static async getLike(LikeId) {
 		try{
-			const like = await Like.findByPk(LikeId);
+			const like = await Like.findById(LikeId);
 			if(!like) {
 				console.log('no Like with that id');
 				return false;

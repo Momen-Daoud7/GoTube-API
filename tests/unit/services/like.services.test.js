@@ -5,149 +5,126 @@ const Channel = require('../../../src/models/3-channel');
 const Video = require('../../../src/models/5-video');
 const Post = require('../../../src/models/7-post');
 const Like = require('../../../src/models/901-like');
-const database = require('../../../src/config/database')
+const database = require('../../../src/config/database');
+let user1,category1,category2,channel1,channel2,video1,post1,post2,like1,like2;
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database()
 })
 
 
 beforeEach(async () => {
-	await User.destroy({where:{}})
-	await Category.destroy({where:{}})
-	await Channel.destroy({where:{}})
-	await Video.destroy({where:{}})
-	await Post.destroy({where:{}})
-	await Like.destroy({where:{}})
+	await User.deleteMany({})
+	await Category.deleteMany({})
+	await Channel.deleteMany({})
+	await Video.deleteMany({})
+	await Post.deleteMany({})
+	await Like.deleteMany({})
 
-	await User.bulkCreate([
-		{
-			id:1,
-			userId:"Momen Daoud Momen Daoud",
-			email:"momen@mail.com",
-			role:'admin',
-			password:"1223393"
-		}
-	])
+	user1 = new User({
+		name:"Momen Daoud Momen Daoud",
+		email:"momen@mail.com",
+		role:'admin',
+		password:"1223393"
+	})
 
-	await Category.bulkCreate([
-		{
-			id:1,
-			userId:"Music"
-		},
-		{
-			id:2,
-			userId:"computer"
-		}
+	category1 = new Category({name:"Music"})
+	category2 = new Category({name:"computer"})
 
-	])
+	channel1 = new Channel({
+		name:"Music for everyone",
+		user:user1._id,
+		image:"anything.png",
+		description:"anything",
+		category:category1._id
+	})
+	channel2 = new Channel({
+		name:"code with me",
+		image:"anything.png",
+		description:"anything",
+		user:user1._id,
+		category:category2._id
+	})
 
-	await Channel.bulkCreate([
-		{
-			id:1,
-			userId:"Music for everyone",
-			userId:1,
-			image:"anything.png",
-			description:"anything",
-			categoryId:1
-		},
-		{
-			id:2,
-			userId:"code with me",
-			image:"anything.png",
-			description:"anything",
-			userId:1,
-			categoryId:2
-		}
-	])
+	video1 = new Video({
+		title:"Best songs ever",
+		channel:channel1._id,
+		description:"anything",
+		image:"any.jpg"
+	})
 
-	await Video.bulkCreate([
-		{
-			id:1,
-			title:"Best songs ever",
-			channelId:1,
-			description:"anything",
-			image:"any.jpg"
-		}
-	])
+	post1 = new Post({content: "it was a good day",channel: channel2._id})
+	post2 = new Post({content: "it was a bad day",channel: channel1._id})
 
-	await Post.bulkCreate([
-		{
-			id:1,
-			content: "it was a good day",
-			channelId: 1
-		},
-		{
-			id:2,
-			content: "it was a bad day",
-			channelId: 1
-		}
-	])
+	like1 = new Like({user:user1._id,video:video1._id})
+	like2 = new Like({user:user1._id,post:post1._id})
 
-	await Like.bulkCreate([
-		{
-			id:1,
-			userId:1,
-			videoId:1,
-		},
-		{
-			id:2,
-			userId:1,
-			postId:1,
-		}
+	await user1.save();
+	await category1.save();
+	await category2.save();
+	await channel1.save();
+	await channel2.save();
+	await video1.save();
+	await post1.save();
+	await post2.save();
+	await like1.save();
+	await like2.save();
 
-	])
+
 })
 
 describe('like services tests', () => {
 
-	it("Should return all likes",async () => {
-		const like = await likeServices.getLikes();
+	it("Should return all video's likes",async () => {
+		const like = await likeServices.getVideoLikes(video1._id);
 		expect(like).toEqual(expect.any(Array));
-		expect(like[0].videoId).toBe(1)
-		expect(like[1].postId).toBe(1)
+		expect(like[0].video.toString()).toBe(video1._id.toString())
+	})
+
+	it("Should return all post's likes",async () => {
+		const like = await likeServices.getPostLikes(post1._id);
+		expect(like).toEqual(expect.any(Array));
+		expect(like[0].post.toString()).toBe(post1._id.toString())
 	})
 
 	describe('test getlike functionallity', () => {
 
 		it("Should get a single like", async () => {
-			const like = await likeServices.getLike(1);
+			const like = await likeServices.getLike(like1._id);
 			console.log(like)
-			expect(like.userId).toBe(1)
+			expect(like.user.toString()).toBe(user1._id.toString())
 		})
 
-		it("Should return false when like is not exists", async () => {
+		it("Should return false or undefined when like is not exists", async () => {
 			const like = await likeServices.getLike(282);
-			expect(like).toBe(false)
+			expect(like).toBe(undefined)
 		})
 	})
 
 	it("should create new like",async () => {
 		const data = { 
-			id:3,
-			userId:1,
-			postId:2
+			user:user1._id,
+			post:post2._id
 		}
 		const like = await likeServices.store(data)
 		console.log(like)
-		expect(like.userId).toBe(data.userId)
-		expect(like.postId).toBe(data.postId)
+		expect(like.user.toString()).toBe(data.user.toString())
+		expect(like.post.toString()).toBe(data.post.toString())
 	})
 
 	describe("Test update like functionallity",() => {
 
 		it("Should update a like details",async () => {
-			const data = {postId: 2}
-			const like = await likeServices.update(2,data)
-			expect(like.postId).toBe(data.postId)
+			const data = {post: post2._id}
+			const like = await likeServices.update(like2._id,data)
+			expect(like.post.toString()).toBe(data.post.toString())
 		})
 
 		it("Should return false when updateing unexiting like",async () => {
 			const data = {postId:2}
 			const like = await likeServices.update(11,data)
-			expect(like).toBe(false)
-			expect(like.postId).toBe(undefined)
+			expect(like).toBe(undefined)
 		})
 	})
 
@@ -155,13 +132,13 @@ describe('like services tests', () => {
 	describe("Test delete like functionallity",() => {
 
 		it("Should delete a like",async () => {
-			const like = await likeServices.delete(1)
+			const like = await likeServices.delete(like1._id)
 			expect(like).toBe(true)
 		})
 
 		it("Should return false when updateing unexiting like",async () => {
 			const like = await likeServices.delete(100)
-			expect(like).toBe(false)
+			expect(like).toBe(undefined)
 		})
 	})
 

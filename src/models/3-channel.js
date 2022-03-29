@@ -1,38 +1,36 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema  = mongoose.Schema;
 
-const database = require('../config/database');
 
-const User = require('./1-user');
-const Category = require('./2-category');
-
-const Channel = database.define('channels', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const ChannelSchema = new Schema({
 	name: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type: String,
+		required:[true,"Name is required"]
 	},
 	description:{ 
-		type: Sequelize.TEXT,
-		allowNull:false
+		type: String,
+		required:[true,"Description is required"]
 	},
 	image: {
-		type: Sequelize.STRING,
-		allowNull: false,
-	}
-
+		type: String,
+	},
+	user: {
+		type:Schema.Types.ObjectId,
+		ref:'user',
+		required:[true,"User is required"]
+	},
+	category: {
+		type:Schema.Types.ObjectId,
+		ref:'category',
+		required:[true,"Category is required."]
+	},
+	playlists:[{
+		type: Schema.Types.ObjectId,
+		ref:'playlists'
+	}]
 });
 
-// Relationships
-User.hasMany(Channel);
-Channel.belongsTo(User);
-Category.belongsTo(Channel);
-Channel.hasOne(Category);
 
-Channel.sync({force:true})
+const Channel = mongoose.model('channel',ChannelSchema);
 
-module.exports = Channel; 
+module.exports = Channel;

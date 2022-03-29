@@ -1,22 +1,17 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-
-const User = require('./1-user');
-const Channel = require('./3-channel');
-
-const Subscribtion = database.define('subscribtions', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
+const SubscribtionSchema = new Schema({
+	channel: {
+		type:Schema.Types.ObjectId,
+		ref:'channel'
 	},
-
+	user:{
+		type:Schema.Types.ObjectId,
+		ref:'user'
+	}
 });
 
-// Relationships
-User.belongsToMany(Channel,{through:Subscribtion,as:"userId"});
-Channel.belongsToMany(User,{through:Subscribtion,as:"channelId"});
+const Subscribtion = mongoose.model('subscribtion',SubscribtionSchema);
 
 module.exports = Subscribtion; 

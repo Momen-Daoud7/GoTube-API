@@ -4,103 +4,79 @@ const Category = require('../../../src/models/2-category');
 const Channel = require('../../../src/models/3-channel');
 const Video = require('../../../src/models/5-video');
 const VideoComment = require('../../../src/models/6-videoComment');
-const database = require('../../../src/config/database')
+const database = require('../../../src/config/database');
+let user1,category1,category2,channel1,channel2,video1,video2,videoComment1,videoComment2;
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database()
 })
 
 
 beforeEach(async () => {
-	await User.destroy({where:{}})
-	await Category.destroy({where:{}})
-	await Channel.destroy({where:{}})
-	await Video.destroy({where:{}})
-	await VideoComment.destroy({where:{}})
+	await User.deleteMany({})
+	await Category.deleteMany({})
+	await Channel.deleteMany({})
+	await Video.deleteMany({})
+	await VideoComment.deleteMany({})
 
-	await User.bulkCreate([
-		{
-			id:1,
-			name:"Momen Daoud Momen Daoud",
-			email:"momen@mail.com",
-			role:'admin',
-			password:"1223393"
-		}
-	])
+	user1 = new User({
+		name:"Momen Daoud Momen Daoud",
+		email:"momen@mail.com",
+		role:'admin',
+		password:"1223393"
+	});
 
-	await Category.bulkCreate([
-		{
-			id:1,
-			name:"Music"
-		},
-		{
-			id:2,
-			name:"computer"
-		}
+	category1 = new Category({name:"Music"});
+	category2 = new Category({name:"computer"});
 
-	])
+	channel1 = new Channel({
+		name:"Music for everyone",
+		user:user1._id,
+		image:"anything.png",
+		description:"anything",
+		category:category1._id
+	})
+	channel2 = new Channel({
+		name:"code with me",
+		image:"anything.png",
+		description:"anything",
+		user:user1._id,
+		category:category2._id
+	})
 
-	await Channel.bulkCreate([
-		{
-			id:1,
-			name:"Music for everyone",
-			userId:1,
-			image:"anything.png",
-			description:"anything",
-			categoryId:1
-		},
-		{
-			id:2,
-			name:"code with me",
-			image:"anything.png",
-			description:"anything",
-			userId:1,
-			categoryId:2
-		}
+	video1 = new Video({
+		title:"Best songs ever",
+		channel:channel1._id,
+		description:"anything",
+		image:"any.jpg"
+	})
+	video2 = new Video({
+		title:"Node.js crash course",
+		channel:channel2._id,
+		description:"anything",
+		image:"any.jpg"
+	})
 
-	])
+	videoComment1 = new VideoComment({comment:"Node.js crash course",video:video1._id,user:user1._id})
+	videoComment2 = new VideoComment({comment:"Python crash course",video:video1._id,user:user1._id})
 
-	await Video.bulkCreate([
-		{
-			id:1,
-			title:"Best songs ever",
-			channelId:1,
-			description:"anything",
-			image:"any.jpg"
-		},
-		{
-			id:2,
-			title:"Node.js crash course",
-			channelId:2,
-			description:"anything",
-			image:"any.jpg"
-		}
-	])
-
-	await VideoComment.bulkCreate([
-		{
-			id:1,
-			comment:"Best songs ever",
-			videoId:1,
-		},
-		{
-			id:2,
-			comment:"Node.js crash course",
-			videoId:2,
-		},
-		{
-			id:3,
-			comment:"Python crash course",
-			videoId:2,
-		}
-	])
+	await user1.save();
+	await category1.save();
+	await category2.save();
+	await channel1.save();
+	await channel2.save();
+	await video1.save();
+	await video2.save();
+	await videoComment1.save();
+	await videoComment2.save();
+		
 })
 
 describe('videoComment services tests', () => {
 
 	it("Should return all videoCommentS",async () => {
-		const videoComments = await videoCommentServices.getVideoComments(2);
+		const videoComments = await videoCommentServices.getVideoComments(video1._id);
 		expect(videoComments).toEqual(expect.any(Array));
 		console.log(videoComments)
 		expect(videoComments[0].comment).toBe('Node.js crash course')
@@ -110,20 +86,21 @@ describe('videoComment services tests', () => {
 	describe('test getvideoComment functionallity', () => {
 
 		it("Should get a single videoComment", async () => {
-			const videoComment = await videoCommentServices.getVideoComment(1);
-			expect(videoComment.comment).toBe('Best songs ever')
+			const videoComment = await videoCommentServices.getVideoComment(videoComment1._id);
+			expect(videoComment.comment).toBe('Node.js crash course')
 		})
 
-		it("Should return false when videoComment is not exists", async () => {
+		it("Should return false or undefined when videoComment is not exists", async () => {
 			const videoComment = await videoCommentServices.getVideoComment(282);
-			expect(videoComment).toBe(false)
+			expect(videoComment).toBe(undefined)
 		})
 	})
 
 	it("should create new videoComment",async () => {
 		const data = { 
 			comment:"Node.js crash course",
-			videoId:2,
+			video:video2._id,
+			user:user1._id
 		}
 		const videoComment = await videoCommentServices.store(data)
 		console.log(videoComment)
@@ -134,15 +111,14 @@ describe('videoComment services tests', () => {
 
 		it("Should update a videoComment details",async () => {
 			const data = {comment: "John Do"}
-			const videoComment = await videoCommentServices.update(1,data)
+			const videoComment = await videoCommentServices.update(videoComment1._id,data)
 			expect(videoComment.comment).toBe(data.comment)
 		})
 
-		it("Should return false when updateing unexiting videoComment",async () => {
+		it("Should return false or undefined when updateing unexiting videoComment",async () => {
 			const data = {comment: "John Do"}
 			const videoComment = await videoCommentServices.update(11,data)
-			expect(videoComment).toBe(false)
-			expect(videoComment.comment).toBe(undefined)
+			expect(videoComment).toBe(undefined)
 		})
 	})
 
@@ -150,13 +126,13 @@ describe('videoComment services tests', () => {
 	describe("Test delete videoComment functionallity",() => {
 
 		it("Should delete a videoComment",async () => {
-			const videoComment = await videoCommentServices.delete(1)
+			const videoComment = await videoCommentServices.delete(videoComment1._id)
 			expect(videoComment).toBe(true)
 		})
 
-		it("Should return false when updateing unexiting videoComment",async () => {
+		it("Should return false or undefined when updateing unexiting videoComment",async () => {
 			const videoComment = await videoCommentServices.delete(100)
-			expect(videoComment).toBe(false)
+			expect(videoComment).toBe(undefined)
 		})
 	})
 

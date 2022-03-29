@@ -1,28 +1,24 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-
-const User = require('./1-user');
-const Video = require('./5-video');
-
-const VideoComment = database.define('video_comments', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const VideoCommentSchema = new Schema({
 	comment: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type:String,
+		required:[true,"Comment is required"]
 	},
-
+	user: {
+		type: Schema.Types.ObjectId,
+		ref:'user',
+		required:[true,"User is required"]
+	},
+	video: {
+		type: Schema.Types.ObjectId,
+		ref:'video',
+		required:[true,"Video is required"]
+	}
 });
 
-// Relationship
-User.hasMany(VideoComment);
-VideoComment.belongsTo(User);
-Video.hasMany(VideoComment);
-VideoComment.belongsTo(Video);
+const VideoComment = mongoose.model('videocomment',VideoCommentSchema);
 
-module.exports = VideoComment; 
+
+module.exports = VideoComment;

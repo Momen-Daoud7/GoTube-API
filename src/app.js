@@ -2,10 +2,15 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 
-const database = require('./config/database');
+const connect = require('./config/database');
+
+const app = express();
 
 // load dotenv
 dotenv.config({ path: './config/config.env'});
+
+// connect to database
+connect()
 
 // Mout routes
 const auth = require('./routes/auth');
@@ -20,7 +25,6 @@ const postComments = require('./routes/postComments');
 const subscribtions = require('./routes/subscribtions');
 const likes = require('./routes/likes');
 
-const app = express();
 
 // Set static folder
 app.use(express.json())

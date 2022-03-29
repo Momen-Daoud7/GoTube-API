@@ -4,30 +4,30 @@ const database = require('../../../src/config/database')
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database()
 })
 
-
+let user1,user2;
 beforeEach(async () => {
-	await User.destroy({where:{}})
+	await User.deleteMany({})
 
-	await User.bulkCreate([
-		{
-			id:1,
-			name:"Momen Daoud Momen Daoud",
-			email:"momen@mail.com",
-			role:'admin',
-			password:"1223393"
-		},
-		{
-			id:2,
-			name:"Ahmed Daoud Momen Daoud",
-			email:"ahmed@mail.com",
-			role:'user',
-			password:"1223393"
-		}
+	user1 = new User({
+		id:1,
+		name:"Momen Daoud Momen Daoud",
+		email:"momen@mail.com",
+		role:'admin',
+		password:"1223393"
+	})
+	user2 = new User({
+		id:2,
+		name:"Ahmed Daoud Momen Daoud",
+		email:"ahmed@mail.com",
+		role:'user',
+		password:"1223393"
+	})
 
-	])
+	await user1.save();
+	await user2.save();
 })
 
 describe('User services tests', () => {
@@ -42,13 +42,13 @@ describe('User services tests', () => {
 	describe('test getUser functionallity', () => {
 
 		it("Should get a single user", async () => {
-			const user = await userServices.getUser(1);
+			const user = await userServices.getUser(user1._id);
 			expect(user.name).toBe('Momen Daoud Momen Daoud')
 		})
 
-		it("Should return false when user is not exists", async () => {
+		it("Should return false or undefined when user is not exists", async () => {
 			const user = await userServices.getUser(282);
-			expect(user).toBe(false)
+			expect(user).toBe(undefined)
 		})
 	})
 
@@ -56,7 +56,6 @@ describe('User services tests', () => {
 		const data = {
 			name:"John Do",
 			email:"momen12@mail.com",
-			role:'manager',
 			password:"1223393"
 		}
 		const user = await userServices.store(data)
@@ -67,15 +66,14 @@ describe('User services tests', () => {
 
 		it("Should update a user details",async () => {
 			const data = {name: "John Do"}
-			const user = await userServices.update(1,data)
+			const user = await userServices.update(user1._id,data)
 			expect(user.name).toBe(data.name)
 		})
 
-		it("Should return false when updateing unexiting user",async () => {
+		it("Should return false or undefined when updateing unexiting user",async () => {
 			const data = {name: "John Do"}
 			const user = await userServices.update(11,data)
-			expect(user).toBe(false)
-			expect(user.name).toBe(undefined)
+			expect(user).toBe(undefined)
 		})
 	})
 
@@ -83,13 +81,13 @@ describe('User services tests', () => {
 	describe("Test delete user functionallity",() => {
 
 		it("Should delete a user",async () => {
-			const user = await userServices.delete(1)
+			const user = await userServices.delete(user1._id)
 			expect(user).toBe(true)
 		})
 
-		it("Should return false when updateing unexiting user",async () => {
+		it("Should return false or undefined when updateing unexiting user",async () => {
 			const user = await userServices.delete(100)
-			expect(user).toBe(false)
+			expect(user).toBe(undefined)
 		})
 	})
 

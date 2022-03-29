@@ -4,7 +4,7 @@ module.exports = class VideoCommentServices {
 	// get all VideoComments
 	static async getVideoComments(videoId) {
 		try{
-			const videoComments = await VideoComment.findAll({where:{videoId},include:{all:true}});
+			const videoComments = await VideoComment.find({video:videoId});
 			return videoComments;
 		}catch(error) {
 			console.log(error);
@@ -24,11 +24,14 @@ module.exports = class VideoCommentServices {
 	// update a VideoComment
 	static async update(videoCommentId,data) {
 		try{
-			const oldVideoComment = await VideoComment.findByPk(videoCommentId)
+			const oldVideoComment = await VideoComment.findById(videoCommentId)
 			if(!oldVideoComment) {
 				return  false;
 			}
-			const updatedVideoComment = await oldVideoComment.update(data);
+			const updatedVideoComment = await VideoComment.findByIdAndUpdate(videoCommentId,data,{
+				new:true,
+				runValidators:true
+			});
 			return updatedVideoComment;
 			
 		}catch(error) {
@@ -39,11 +42,11 @@ module.exports = class VideoCommentServices {
 	// delete a VideoComment
 	static async delete(VideoCommentId) {
 		try{
-			const videoComment = await VideoComment.findByPk(VideoCommentId);
+			const videoComment = await VideoComment.findById(VideoCommentId);
 			if(!videoComment) {
 				return false;
 			}
-			const deleted = await videoComment.destroy();
+			const deleted = await videoComment.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -53,7 +56,7 @@ module.exports = class VideoCommentServices {
 	// get a single VideoComment
 	static async getVideoComment(VideoCommentId) {
 		try{
-			const videoComment = await VideoComment.findByPk(VideoCommentId);
+			const videoComment = await VideoComment.findById(VideoCommentId);
 			if(!videoComment) {
 				console.log('no VideoComment with that id');
 				return false;

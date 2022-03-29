@@ -1,27 +1,21 @@
 const categorieServices = require('../../../src/services/category.services')
-const category = require('../../../src/models/2-category');
+const Category = require('../../../src/models/2-category');
 const database = require('../../../src/config/database')
 
 // Connect to database
 beforeAll(async () => {
-	await database.sync()
+	await database();
 })
 
-
+let category1,category2;
 beforeEach(async () => {
-	await category.destroy({where:{}})
+	await Category.deleteMany({})
 
-	await category.bulkCreate([
-		{
-			id:1,
-			name:"Music"
-		},
-		{
-			id:2,
-			name:"computer"
-		}
+	category1 = new Category({name:"Music"})
+	category2 = new Category({ name:"computer"})
 
-	])
+	await category1.save();
+	await category2.save();
 })
 
 describe('category services tests', () => {
@@ -36,13 +30,13 @@ describe('category services tests', () => {
 	describe('test getcategory functionallity', () => {
 
 		it("Should get a single category", async () => {
-			const category = await categorieServices.getCategory(1);
+			const category = await categorieServices.getCategory(category1._id);
 			expect(category.name).toBe('Music')
 		})
 
-		it("Should return false when category is not exists", async () => {
+		it("Should return false or undefined when category is not exists", async () => {
 			const category = await categorieServices.getCategory(282);
-			expect(category).toBe(false)
+			expect(category).toBe(undefined)
 		})
 	})
 
@@ -56,15 +50,14 @@ describe('category services tests', () => {
 
 		it("Should update a category details",async () => {
 			const data = {name: "John Do"}
-			const category = await categorieServices.update(1,data)
+			const category = await categorieServices.update(category1._id,data)
 			expect(category.name).toBe(data.name)
 		})
 
-		it("Should return false when updateing unexiting category",async () => {
+		it("Should return false or undefined when updateing unexiting category",async () => {
 			const data = {name: "John Do"}
 			const category = await categorieServices.update(11,data)
-			expect(category).toBe(false)
-			expect(category.name).toBe(undefined)
+			expect(category).toBe(undefined)
 		})
 	})
 
@@ -72,13 +65,13 @@ describe('category services tests', () => {
 	describe("Test delete category functionallity",() => {
 
 		it("Should delete a category",async () => {
-			const category = await categorieServices.delete(1)
+			const category = await categorieServices.delete(category1._id)
 			expect(category).toBe(true)
 		})
 
-		it("Should return false when updateing unexiting category",async () => {
+		it("Should return false or undefined when updateing unexiting category",async () => {
 			const category = await categorieServices.delete(100)
-			expect(category).toBe(false)
+			expect(category).toBe(undefined)
 		})
 	})
 

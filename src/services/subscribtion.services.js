@@ -4,7 +4,7 @@ module.exports = class SubscribtionServices {
 	// get all channels
 	static async getSubscribtions(channelId) {
 		try{
-			const subscribtions = await Subscribtion.findAll({where:{channelId},include:{all:true}});
+			const subscribtions = await Subscribtion.find({channel:channelId.toString()});
 			return subscribtions;
 		}catch(error) {
 			console.log(error);
@@ -14,7 +14,7 @@ module.exports = class SubscribtionServices {
 	// get all user's channels
 	static async getUserSubscribtions(userId) {
 		try{
-			const subscribtions = await Subscribtion.findAll({where:{userId},include:{all:true}});
+			const subscribtions = await Subscribtion.find({user:userId.toString()});
 			return subscribtions;
 		}catch(error) {
 			console.log(error);
@@ -34,11 +34,14 @@ module.exports = class SubscribtionServices {
 	// update a Subscribtion
 	static async update(SubscribtionId,data) {
 		try{
-			const oldSubscribtion = await Subscribtion.findByPk(SubscribtionId)
+			const oldSubscribtion = await Subscribtion.findById(SubscribtionId)
 			if(!oldSubscribtion) {
 				return  false;
 			}
-			const updatedSubscribtion = await oldSubscribtion.update(data);
+			const updatedSubscribtion = await Subscribtion.findByIdAndUpdate(SubscribtionId,data,{
+				new:true,
+				runValidators:true
+			});
 			return updatedSubscribtion;
 			
 		}catch(error) {
@@ -49,11 +52,11 @@ module.exports = class SubscribtionServices {
 	// delete a Subscribtion
 	static async delete(SubscribtionId) {
 		try{
-			const subscribtion = await Subscribtion.findByPk(SubscribtionId);
+			const subscribtion = await Subscribtion.findById(SubscribtionId);
 			if(!subscribtion) {
 				return false;
 			}
-			await subscribtion.destroy();
+			await subscribtion.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -63,7 +66,7 @@ module.exports = class SubscribtionServices {
 	// get a single Subscribtion
 	static async getSubscribtion(SubscribtionId) {
 		try{
-			const subscribtion = await Subscribtion.findByPk(SubscribtionId);
+			const subscribtion = await Subscribtion.findById(SubscribtionId);
 			if(!subscribtion) {
 				console.log('no Subscribtion with that id');
 				return false;

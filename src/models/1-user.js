@@ -1,68 +1,63 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-					
-const User = database.define('users', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const UserSchema = new Schema({
 	name: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type: String,
+		required:[true,"Name is required."]
 	},
 	email: {
-	    type: Sequelize.STRING,
-	    allowNull:false,
-	    unique: true,
-	    validate: {
-	    	isEmail:true
-	    }
-  	},
-    role: {
-	    type: Sequelize.ENUM('admin','user'),
-	    defaultValue:"user",
-	    allowNull:false
+		type:String,
+		required:[true,"Email is required."],
+		unique:true
+	},
+	role: {
+		type:String,
+		enum:['admin','user'],
+		required:[true,"Role is required"],
+		default:'user'
   	},
   	status: {
-	    type: Sequelize.ENUM('Pending',"Active"),
-	    allowNull:false,
-	    defaultValue:"Pending"
-  	},
-    password: {
-	    type: Sequelize.STRING,
-	    allowNull:false,
+  		type:String,
+		enum:['Pending',"Active"],
+		required:[true,"Status is required"],
+		default:'Pending'
   	},
   	resetPasswordToken: {
-	  	type: Sequelize.STRING,
+	  	type: String,
 	},
 	resetPasswordExpire: {
-	  	type: Sequelize.DATE
+	  	type: String,
 	},
 	confirmationCode: {
-	  	type: Sequelize.STRING,
+	  	type: String,
 	},
-
+	password: {
+		type:String,
+		requried:[true,"Password is required."]
+	},
+	channels:[{
+		type: Schema.Types.ObjectId,
+		ref:'channels'
+	}]
 });
 
-// Match passwords
-User.prototype.matchPassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword,this.password);
+
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+	return await bcrypt.compare(enteredPassword,this.password);
 }
 
 // Get signed User
-User.prototype.getSignedJwtToken = function() {
-    return jwt.sign({id:this.id},process.env.JWT_SECRET,{
+UserSchema.methods.getSignedJwtToken = function() {
+    return jwt.sign({id:this._id},process.env.JWT_SECRET,{
       expiresIn:"30d"
     })
 }
 
-User.prototype.getResetPasswordToken = async function() {
+UserSchema.methods.getResetPasswordToken = async function() {
 	// Genrate token
 	const resetToken = crypto.randomBytes(20).toString('hex');
 
@@ -75,4 +70,7 @@ User.prototype.getResetPasswordToken = async function() {
 	return resetToken;
 }
 
-module.exports = User; 
+
+const User = mongoose.model('user',UserSchema);
+
+module.exports = User;

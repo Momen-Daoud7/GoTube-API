@@ -1,35 +1,32 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-
-const Channel = require('./3-channel');
-const Playlist = require('./4-playlist');
-
-const Video = database.define('videos', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const VideoSchema = new Schema({
 	title: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type: String,
+		required:[true,"Title is required."]
 	},
 	description: {
-		type: Sequelize.TEXT
+		type: String
 	},
 	image: {
-		type: Sequelize.STRING,
-		allowNull:false
-	}
-
+		type: String,
+	},
+	channel: {
+		type: Schema.Types.ObjectId,
+		ref:'channel',
+		required:[true,"Channel is required"]
+	},
+	playlist: {
+		type: Schema.Types.ObjectId,
+		ref:"playlist"
+	},
+	comments:[{
+		type: Schema.Types.ObjectId,
+		ref:'videocomments'
+	}]
 });
 
-// Relationships
-Channel.hasMany(Video);
-Video.belongsTo(Channel);
-Playlist.hasMany(Video);
-Video.belongsTo(Playlist)
+const Video = mongoose.model('video',VideoSchema);
 
-module.exports = Video; 
+module.exports = Video;

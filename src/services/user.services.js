@@ -5,7 +5,7 @@ module.exports = class userServices {
 	// get all users
 	static async getUsers() {
 		try{
-			const users = await User.findAll();
+			const users = await User.find({});
 			return users;
 		}catch(error) {
 			console.log(error);
@@ -27,16 +27,14 @@ module.exports = class userServices {
 	// update a user
 	static async update(userId,data) {
 		try{
-			const oldUser = await User.findByPk(userId)
+			const oldUser = await User.findById(userId)
 			if(!oldUser) {
 				return  false;
 			}
-			const updatedUser = await oldUser.update({
-					name: data.name,
-					email: data.email,
-					password: data.password || oldUser.password,
-					role: data.role || oldUser.role
-				});
+			const updatedUser = await User.findByIdAndUpdate(userId,data,{
+				new:true,
+				runValidators:true
+			});
 			console.log(updatedUser)
 				return updatedUser;
 			
@@ -48,11 +46,11 @@ module.exports = class userServices {
 	// delete a user
 	static async delete(userId) {
 		try{
-			const user = await User.findByPk(userId);
+			const user = await User.findById(userId);
 			if(!user) {
 				return false;
 			}
-			const deleted = await user.destroy();
+			const deleted = await user.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -62,7 +60,7 @@ module.exports = class userServices {
 	// get a single user
 	static async getUser(userId) {
 		try{
-			const user = await User.findByPk(userId);
+			const user = await User.findById(userId);
 			if(!user) {
 				console.log('no user with that id');
 				return false;

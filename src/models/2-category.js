@@ -1,20 +1,14 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
 
-const Category = database.define('categories', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const CategorySchema = new Schema({
 	name: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		unique:true
-	},
+		type:String,
+		required:[true,"Name is required."]
+	}
+})
 
-});
+const Category = mongoose.model('category',CategorySchema);
 
-module.exports = Category; 
+module.exports = Category;

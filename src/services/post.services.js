@@ -4,7 +4,7 @@ module.exports = class PostServices {
 	// get all posts
 	static async getPosts() {
 		try{
-			const posts = await Post.findAll();
+			const posts = await Post.find({});
 			return posts;
 		}catch(error) {
 			console.log(error);
@@ -14,7 +14,7 @@ module.exports = class PostServices {
 	// get all channel posts
 	static async getChannelPosts(channelId) {
 		try{
-			const posts = await Post.findAll({where:{channelId:channelId}});
+			const posts = await Post.find({channel:channelId.toString()});
 			return posts;
 		}catch(error) {
 			console.log(error);
@@ -34,11 +34,14 @@ module.exports = class PostServices {
 	// update a Post
 	static async update(PostId,data) {
 		try{
-			const oldPost = await Post.findByPk(PostId)
+			const oldPost = await Post.findById(PostId)
 			if(!oldPost) {
 				return  false;
 			}
-			const updatedPost = await oldPost.update(data);
+			const updatedPost = await Post.findByIdAndUpdate(PostId,data,{
+				new:true,
+				runValidators:true
+			});
 			return updatedPost;
 			
 		}catch(error) {
@@ -49,11 +52,11 @@ module.exports = class PostServices {
 	// delete a Post
 	static async delete(PostId) {
 		try{
-			const post = await Post.findByPk(PostId);
+			const post = await Post.findById(PostId);
 			if(!post) {
 				return false;
 			}
-			const deleted = await post.destroy();
+			const deleted = await post.remove();
 			return true;
 		}catch(error){
 			console.log(error);
@@ -63,7 +66,7 @@ module.exports = class PostServices {
 	// get a single Post
 	static async getPost(PostId) {
 		try{
-			const post = await Post.findByPk(PostId);
+			const post = await Post.findById(PostId);
 			if(!post) {
 				console.log('no Post with that id');
 				return false;

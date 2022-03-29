@@ -1,27 +1,25 @@
-const Sequelize = require('sequelize');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const database = require('../config/database');
-
-const Channel = require('./3-channel');
-
-const Post = database.define('posts', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		allowNull: false,
-		primaryKey: true,
-	},
+const PostSchema = new Schema({
 	content: {
-		type: Sequelize.STRING,
-		allowNull: false,
+		type: String,
+		required:[true,"Content is required."]
 	},
 	image: {
-		type: Sequelize.STRING
-	}
-
+		type: String
+	},
+	channel: {
+		type: Schema.Types.ObjectId,
+		ref:'channel',
+		required:[true,"Channel is required."]
+	},
+	comments: [{
+		type: Schema.Types.ObjectId,
+		ref:'postcomments'
+	}]
 });
 
-Channel.hasMany(Post);
-Post.belongsTo(Channel);
+const Post = mongoose.model('post',PostSchema);
 
-module.exports = Post; 
+module.exports = Post;
